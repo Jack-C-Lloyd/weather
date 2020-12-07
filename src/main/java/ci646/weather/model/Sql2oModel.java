@@ -24,30 +24,6 @@ public class Sql2oModel implements Model {
     }
 
     @Override
-    public void setupDatabase() {
-        try (Connection conn = sql2o.open()) {
-            conn.createQuery("DROP TABLE IF EXISTS records")
-                    .executeUpdate();
-            conn.createQuery("DROP TABLE IF EXISTS locations")
-                    .executeUpdate();
-            conn.createQuery("CREATE TABLE locations ( loc_id INTEGER PRIMARY KEY, " +
-                    "name VARCHAR(200) NOT NULL, " +
-                    "lat REAL NOT NULL, " +
-                    "lon REAL NOT NULL, " +
-                    "asl REAL NOT NULL );")
-                    .executeUpdate();
-            conn.createQuery("CREATE TABLE records ( loc_id INTEGER NOT NULL, " +
-                    "ts TIMESTAMP NOT NULL, " +
-                    "temperature REAL NOT NULL, " +
-                    "humidity REAL NOT NULL, " +
-                    "wind_direction REAL NOT NULL, " +
-                    "wind_speed REAL NOT NULL, " +
-                    "FOREIGN KEY(loc_id) REFERENCES locations(loc_id) );")
-                    .executeUpdate();
-        }
-    }
-
-    @Override
     public void putLocation(Location loc) {
         try (Connection conn = sql2o.open()) {
             conn.createQuery("INSERT INTO locations(name, lat, lon, asl) " +
@@ -79,8 +55,8 @@ public class Sql2oModel implements Model {
     public Optional<List<Location>> getLocationsByName(String name) {
         try (Connection conn = sql2o.open()) {
             List<Location> result = conn.createQuery(
-                    "SELECT name, lat, lon, asl FROM locations WHERE name = :name")
-                    .addParameter("name", name)
+                    "SELECT name, lat, lon, asl FROM locations WHERE name LIKE :name")
+                    .addParameter("name", "%"+name+"%")
                     .executeAndFetch(Location.class);
             Optional<List<Location>> l = Optional.empty();
             if (result.size() > 0) {

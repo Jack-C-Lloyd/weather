@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Model {
-    void setupDatabase();
     void putLocation(Location loc);
     Optional<List<Location>> getLocations();
     Optional<Location> getLocation(long locationID);

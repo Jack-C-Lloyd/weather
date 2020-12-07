@@ -5,16 +5,21 @@ import ci646.weather.model.Record;
 import ci646.weather.model.Location;
 import ci646.weather.model.Sql2oModel;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;
+import netscape.javascript.JSObject;
 import org.sql2o.Sql2o;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 
 import static spark.Spark.*;
 import spark.ModelAndView;
@@ -62,15 +67,12 @@ public class Application {
         /*
         Locations
          */
+
         // Handle GET requests for named locations -- JSON
         get("/locations", "application/json", (req, res) -> {
             log.info("received GET locations");
             Optional<List<Location>> or = model.getLocations();
-            if(or.isEmpty()) {
-                return new Gson().toJson("");
-            } else {
-                return new Gson().toJson(or.get());
-            }
+            return jsonify(or);
         });
 
         // Handle GET requests for named locations -- JSON
@@ -78,28 +80,42 @@ public class Application {
             String name = req.params(":name");
             log.info("received GET locations/"+name);
             Optional<List<Location>> or = model.getLocationsByName(name);
-
-            if(or.isEmpty()) {
-                return new Gson().toJson("");
-            } else {
-                return new Gson().toJson(or.get());
-            }
+            return jsonify(or);
         });
 
         /*
         Records
          */
+
         // Handle GET requests for records at a given location -- JSON
         get("/records/:loc", "application/json", (req, res) -> {
-            log.info("received GET requests");
+            log.info("received GET records FOR LOCATION");
             int id = Integer.parseInt(req.params(":loc"));
             Optional<List<Record>> or = model.getRecords(id);
-            if(or.isEmpty()) {
-                return new Gson().toJson("");
-            } else {
-                return new Gson().toJson(or.get());
+            return jsonify(or);
+        });
+
+        // Handle GET requests for records at a given location -- JSON
+        get("/records/:loc/:from/:to", "application/json", (req, res) -> {
+            log.info("received GET records FOR LOCATION FROM TO");
+            int id = Integer.parseInt(req.params(":loc"));
+            try {
+                Timestamp from = Timestamp.from(LocalDateTime.parse(req.params(":from")).toInstant(ZoneOffset.UTC));
+                Timestamp to = Timestamp.from(LocalDateTime.parse(req.params(":to")).toInstant(ZoneOffset.UTC));
+                Optional<List<Record>> or = model.getRecords(id, from, to);
+                return jsonify(or);
+            } catch (DateTimeParseException e) {
+                return new Gson().toJson(e);
             }
         });
+    }
+
+    private static <T> String jsonify(Optional<T> o) {
+        if (o.isEmpty()) {
+            return new Gson().toJson(new JsonObject());
+        } else {
+            return new Gson().toJson(o.get());
+        }
     }
 
     /**
