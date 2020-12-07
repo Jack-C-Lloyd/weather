@@ -5,11 +5,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Model {
-    void putLocation(Location loc);
+    long putLocation(Location loc);
     Optional<List<Location>> getLocations();
     Optional<Location> getLocation(long locationID);
     Optional<List<Location>> getLocationsByName(String name);
-    void putRecord(Record rec);
+    long putRecord(Record rec);
+    Optional<Record> getRecord(long id);
     Optional<Record> getRecord(long locationID, Timestamp ts);
     Optional<List<Record>> getRecords(long locationID);
     Optional<List<Record>> getRecords(long locationID, Timestamp from, Timestamp to);

@@ -68,7 +68,7 @@ public class Main {
                     // do nothing
                 } else {
                     fields = line.split(",");
-                    int locID = model.getLocationsByName("Alberta, Canada").get().get(0).getLocID();
+                    long locID = model.getLocationsByName("Alberta, Canada").get().get(0).getLocID();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd hhmm");
                     Date parsedDate = dateFormat.parse(fields[0]);
                     Timestamp timestamp = new Timestamp(parsedDate.getTime());
@@ -97,7 +97,8 @@ public class Main {
                     "lon REAL NOT NULL, " +
                     "asl REAL NOT NULL );")
                     .executeUpdate();
-            conn.createQuery("CREATE TABLE records ( loc_id INTEGER NOT NULL, " +
+            conn.createQuery("CREATE TABLE records ( record_id INTEGER PRIMARY KEY, " +
+                    "loc_id INTEGER NOT NULL, " +
                     "ts TIMESTAMP NOT NULL, " +
                     "temperature REAL NOT NULL, " +
                     "humidity REAL NOT NULL, " +

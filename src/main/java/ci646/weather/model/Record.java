@@ -1,19 +1,24 @@
 package ci646.weather.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.sql.Timestamp;
 
 @Data
-@AllArgsConstructor
+@RequiredArgsConstructor
 @ToString
 public class Record {
-    private int locID;
+    private long recordID;
+    @NonNull
+    private long locID;
+    @NonNull
     private Timestamp timestamp;
+    @NonNull
     private float temperature;
+    @NonNull
     private float humidity;
+    @NonNull
     private float windSpeed;
+    @NonNull
     private float windDirection;
 }

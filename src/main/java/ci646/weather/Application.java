@@ -83,8 +83,8 @@ public class Application {
                     , Float.parseFloat(req.queryParams("lon"))
                     , Float.parseFloat(req.queryParams("asl")));
             log.info("received PUT location");
-            model.putLocation(l);
-            return jsonify(null);
+            long id = model.putLocation(l);
+            return jsonify(model.getLocation(id));
         });
 
         // Handle GET requests for named locations -- JSON
@@ -119,6 +119,22 @@ public class Application {
             } catch (DateTimeParseException e) {
                 return new Gson().toJson(e);
             }
+        });
+
+        // Handle POST requests for records -- JSON
+        post("/records/:loc", "application/json", (req, res) -> {
+            log.info(req.queryString());
+            long loc = Long.parseLong(req.params(":loc"));
+            Timestamp ts = Timestamp.from(LocalDateTime.parse(req.queryParams("ts")).toInstant(ZoneOffset.UTC));
+            Record r = new Record(loc
+                    , ts
+                    , Float.parseFloat(req.queryParams("temp"))
+                    , Float.parseFloat(req.queryParams("hum"))
+                    , Float.parseFloat(req.queryParams("ws"))
+                    , Float.parseFloat(req.queryParams("wd")));
+            log.info("received PUT record");
+            long id = model.putRecord(r);
+            return jsonify(model.getRecord(id));
         });
     }
 

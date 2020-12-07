@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 @RequiredArgsConstructor
 @ToString
 public class Location {
-    private int locID;
+    private long locID;
     @NonNull
     private String name;
     @NonNull
