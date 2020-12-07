@@ -75,6 +75,18 @@ public class Application {
             return jsonify(or);
         });
 
+        // Handle POST requests for locations -- JSON
+        post("/locations", "application/json", (req, res) -> {
+            log.info(req.queryString());
+            Location l = new Location(req.queryParams("name")
+                    , Float.parseFloat(req.queryParams("lat"))
+                    , Float.parseFloat(req.queryParams("lon"))
+                    , Float.parseFloat(req.queryParams("asl")));
+            log.info("received PUT location");
+            model.putLocation(l);
+            return jsonify(null);
+        });
+
         // Handle GET requests for named locations -- JSON
         get("/locations/:name", "application/json", (req, res) -> {
             String name = req.params(":name");
@@ -111,7 +123,7 @@ public class Application {
     }
 
     private static <T> String jsonify(Optional<T> o) {
-        if (o.isEmpty()) {
+        if (o == null || o.isEmpty()) {
             return new Gson().toJson(new JsonObject());
         } else {
             return new Gson().toJson(o.get());
