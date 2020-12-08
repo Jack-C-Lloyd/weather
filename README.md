@@ -13,3 +13,21 @@ $ curl -H "Accept: application/json" --request POST -d \
 {"recordID":198,"locID":2,"timestamp":"Dec 7, 2020, 12:00:00 AM",
 "temperature":5.0,"humidity":9.0,"windSpeed":42.0,"windDirection":99.0}
 ```
+
+Problem with the date format: 
+
+```
+{"recordID":192,"locID":1,"timestamp":"Dec 7, 2020, 11:00:00 PM",
+"temperature":0.22818804,"humidity":98.0,"windSpeed":19.602652,"windDirection":277.38605}
+```
+
+Then:
+```
+private static Gson gson = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm").create();
+```
+resulting in
+```
+{"recordID":192,"locID":1,"timestamp":"2020-12-07T23:00","temperature":0.22818804,
+"humidity":98.0,"windSpeed":19.602652,"windDirection":277.38605}
+```

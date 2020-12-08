@@ -18,7 +18,7 @@ public class Sql2oModel implements Model {
         Map<String, String> colMaps = new HashMap<String,String>();
         colMaps.put("LOC_ID", "locID");
         colMaps.put("RECORD_ID", "recordID");
-        colMaps.put("TS", "timestamp");
+        colMaps.put("TS", "date");
         colMaps.put("WIND_SPEED", "windSpeed");
         colMaps.put("WIND_DIRECTION", "windDirection");
         sql2o.setDefaultColumnMappings(colMaps);
@@ -91,7 +91,7 @@ public class Sql2oModel implements Model {
             conn.createQuery("INSERT INTO records(loc_id, ts, temperature, humidity, wind_speed, wind_direction) " +
                     "VALUES (:locid, :ts, :temp, :hum, :ws, :wd)")
                     .addParameter("locid", rec.getLocID())
-                    .addParameter("ts", rec.getTimestamp())
+                    .addParameter("ts", rec.getDate())
                     .addParameter("temp", rec.getTemperature())
                     .addParameter("hum", rec.getHumidity())
                     .addParameter("ws", rec.getWindSpeed())

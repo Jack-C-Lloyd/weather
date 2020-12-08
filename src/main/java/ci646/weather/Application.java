@@ -5,6 +5,7 @@ import ci646.weather.model.Record;
 import ci646.weather.model.Location;
 import ci646.weather.model.Sql2oModel;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -14,6 +15,7 @@ import org.sql2o.Sql2o;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -29,6 +31,8 @@ import spark.template.velocity.VelocityTemplateEngine;
 public class Application {
     //Our Data Access Object (DAO)
     private static Model model = null;
+    private static Gson gson = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm").create();
 
     /**
      * Entry point
@@ -102,7 +106,7 @@ public class Application {
         // Handle GET requests for records at a given location -- JSON
         get("/records/:loc", "application/json", (req, res) -> {
             log.info("received GET records FOR LOCATION");
-            int id = Integer.parseInt(req.params(":loc"));
+            long id = Long.parseLong(req.params(":loc"));
             Optional<List<Record>> or = model.getRecords(id);
             return jsonify(or);
         });
@@ -110,7 +114,7 @@ public class Application {
         // Handle GET requests for records at a given location -- JSON
         get("/records/:loc/:from/:to", "application/json", (req, res) -> {
             log.info("received GET records FOR LOCATION FROM TO");
-            int id = Integer.parseInt(req.params(":loc"));
+            long id = Long.parseLong(req.params(":loc"));
             try {
                 Timestamp from = Timestamp.from(LocalDateTime.parse(req.params(":from")).toInstant(ZoneOffset.UTC));
                 Timestamp to = Timestamp.from(LocalDateTime.parse(req.params(":to")).toInstant(ZoneOffset.UTC));
@@ -140,9 +144,9 @@ public class Application {
 
     private static <T> String jsonify(Optional<T> o) {
         if (o == null || o.isEmpty()) {
-            return new Gson().toJson(new JsonObject());
+            return gson.toJson(new JsonObject());
         } else {
-            return new Gson().toJson(o.get());
+            return gson.toJson(o.get());
         }
     }
 

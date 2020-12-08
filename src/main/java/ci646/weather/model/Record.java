@@ -12,7 +12,7 @@ public class Record {
     @NonNull
     private long locID;
     @NonNull
-    private Timestamp timestamp;
+    private Timestamp date;
     @NonNull
     private float temperature;
     @NonNull
