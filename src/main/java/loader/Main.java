@@ -22,11 +22,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Config conf         = ConfigFactory.load();
+        Config conf = ConfigFactory.load();
 
         String dbConnString = conf.getString("db.connectionString");
-        String dbUser       = conf.getString("db.user");
-        String dbPass       = conf.getString("db.password");
+        String dbUser = conf.getString("db.user");
+        String dbPass = conf.getString("db.password");
         // Set up the DAO
         sql2o = new Sql2o(dbConnString, dbUser, dbPass);
         Sql2oModel model = new Sql2oModel(sql2o);
@@ -36,6 +36,7 @@ public class Main {
             e.printStackTrace();
         }
         setupDatabase();
+        // Input locations
         InputStream is = Main.class.getResourceAsStream("/data/location.dat");
         try (BufferedReader br
                      = new BufferedReader(new InputStreamReader(is))) {
@@ -46,18 +47,18 @@ public class Main {
                     // do nothing
                 } else {
                     fields = line.split(",");
-                    Location l = new Location(fields[0]+","+fields[1],
+                    Location l = new Location(fields[0] + "," + fields[1],
                             Float.parseFloat(fields[2].trim()),
                             Float.parseFloat(fields[3].trim()),
                             Float.parseFloat(fields[4].trim()));
-                    log.info("Inserting: "+l.toString());
+                    log.info("Inserting: " + l.toString());
                     model.putLocation(l);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        // Input records from first dat file
         is = Main.class.getResourceAsStream("/data/weather.dat");
         try (BufferedReader br
                      = new BufferedReader(new InputStreamReader(is))) {
@@ -68,24 +69,51 @@ public class Main {
                     // do nothing
                 } else {
                     fields = line.split(",");
-                    long locID = model.getLocationsByName("Alberta, Canada").get().get(0).getLocID();
+                    long locID1 = model.getLocationsByName("Alberta, Canada").get().get(0).getLocID();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd hhmm");
                     Date parsedDate = dateFormat.parse(fields[0]);
                     Timestamp timestamp = new Timestamp(parsedDate.getTime());
-                    Record r = new Record(locID, timestamp, Float.parseFloat(fields[1].trim()),
+                    Record r = new Record(locID1, timestamp, Float.parseFloat(fields[1].trim()),
                             Float.parseFloat(fields[2].trim()),
                             Float.parseFloat(fields[3].trim()),
                             Float.parseFloat(fields[4].trim()));
-                    log.info("Inserting: "+r.toString());
+                    log.info("Inserting: " + r.toString());
                     model.putRecord(r);
                 }
             }
-        } catch (IOException | ParseException e) {
+
+            // Input records from second dat file
+            is = Main.class.getResourceAsStream("/data/weather2.dat");
+            try (BufferedReader br2
+                         = new BufferedReader(new InputStreamReader(is))) {
+                while ((line = br2.readLine()) != null) {
+                    if (line.isEmpty() || line.startsWith("#")) {
+                        // do nothing
+                    } else {
+                        fields = line.split(",");
+                        long locID2 = model.getLocationsByName("Brighton, UK").get().get(0).getLocID();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd hhmm");
+                        Date parsedDate = dateFormat.parse(fields[0]);
+                        Timestamp timestamp = new Timestamp(parsedDate.getTime());
+                        Record r = new Record(locID2, timestamp, Float.parseFloat(fields[1].trim()),
+                                Float.parseFloat(fields[2].trim()),
+                                Float.parseFloat(fields[3].trim()),
+                                Float.parseFloat(fields[4].trim()));
+                        log.info("Inserting: " + r.toString());
+                        model.putRecord(r);
+                    }
+                }
+            } catch (IOException | ParseException e) {
+                e.printStackTrace();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void setupDatabase() {
+        public static void setupDatabase() {
         try (Connection conn = sql2o.open()) {
             conn.createQuery("DROP TABLE IF EXISTS records")
                     .executeUpdate();
