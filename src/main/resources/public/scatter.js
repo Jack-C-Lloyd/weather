@@ -58,8 +58,8 @@ function drawGraph(locID)
             var mousemove = function (d) {
                 return Tooltip
                     .html("Wind speed: " + d.windSpeed.toFixed(2))
-                    .style("left", (d3.mouse(this)[1]) + "px")
-                    .style("top", (d3.mouse(this)[0]) + "px");
+                    .style("left", event.clientX + "px")
+                    .style("top", event.clientY + "px");
             };
             var mouseleave = function (d) {
                 Tooltip
