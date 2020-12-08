@@ -61,6 +61,7 @@ d3.json("http://localhost:4567/records/1",
       var Tooltip = d3.select("#my_dataviz")
           .append("div")
           .style("opacity", 0)
+          .style("position", "absolute")
           .attr("class", "tooltip")
           .style("background-color", "white")
           .style("border", "solid")
@@ -76,9 +77,9 @@ d3.json("http://localhost:4567/records/1",
       var mousemove = function(d) {
           console.log(x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) + "px, "+y(d.temperature) + "px");
           return Tooltip
-              .html("Wind speed: " + d.windSpeed)
-              .style("left", x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) + "px")
-              .style("top", y(d.temperature) + "px");
+              .html("Wind speed: " + d.windSpeed.toFixed(2))
+              .style("left", (d3.mouse(this)[1]) + "px")
+              .style("top", (d3.mouse(this)[0]) + "px");
       };
       var mouseleave = function(d) {
           Tooltip
