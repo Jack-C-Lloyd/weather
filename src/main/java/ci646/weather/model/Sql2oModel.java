@@ -133,6 +133,21 @@ public class Sql2oModel implements Model {
     }
 
     @Override
+    public Optional<List<Record>> getRecords() {
+        try (Connection conn = sql2o.open()) {
+            List<Record> result = conn.createQuery(
+                    "SELECT record_id, loc_id, ts, temperature, humidity, wind_speed, wind_direction " +
+                            "FROM records ")
+                    .executeAndFetch(Record.class);
+            Optional<List<Record>> l = Optional.empty();
+            if (result.size() > 0) {
+                l = Optional.of(result);
+            }
+            return l;
+        }
+    }
+
+    @Override
     public Optional<List<Record>> getRecords(long locationID) {
         try (Connection conn = sql2o.open()) {
             List<Record> result = conn.createQuery(

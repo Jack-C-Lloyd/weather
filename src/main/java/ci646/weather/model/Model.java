@@ -12,6 +12,7 @@ public interface Model {
     long putRecord(Record rec);
     Optional<Record> getRecord(long id);
     Optional<Record> getRecord(long locationID, Timestamp ts);
+    Optional<List<Record>> getRecords();
     Optional<List<Record>> getRecords(long locationID);
     Optional<List<Record>> getRecords(long locationID, Timestamp from, Timestamp to);
 }

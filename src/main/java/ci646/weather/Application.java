@@ -103,6 +103,13 @@ public class Application {
         Records
          */
 
+        // Handle GET requests for all records  -- JSON
+        get("/records", "application/json", (req, res) -> {
+            log.info("received GET records FOR LOCATION");
+            Optional<List<Record>> or = model.getRecords();
+            return jsonify(or);
+        });
+
         // Handle GET requests for records at a given location -- JSON
         get("/records/:loc", "application/json", (req, res) -> {
             log.info("received GET records FOR LOCATION");

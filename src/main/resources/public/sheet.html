@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather data</title>
+
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css" rel="stylesheet">
+
+    <script language="JavaScript">
+        const data = [
+            ['', 'Tesla', 'Volvo', 'Toyota', 'Ford'],
+            ['2019', 10, 11, 12, 13],
+            ['2020', 20, 11, 14, 13],
+            ['2021', 30, 15, 12, 13]
+        ];
+        var host = "http://localhost:4567/";
+        var recordsURL = host + "records";
+        var locationsURL = host + "locations";
+        var locationsData;
+        var recordsData;
+
+        d3.json(locationsURL, function (data) {
+            locationsData = data;
+            d3.json(recordsURL, function (data) {
+                recordsData = data.map(d => {
+                    d.location = locationsData.find(l => {
+                        return l.locID === d.locID;
+                    }).name;
+                    return d;
+                });
+                makeTable();
+            });
+        });
+
+    </script>
+</head>
+<body>
+
+<div id="example"></div>
+
+<script>
+
+    function makeTable() {
+        const container = document.getElementById('example');
+        console.log(locationsData);
+        const hot = new Handsontable(container, {
+            data: recordsData,
+            rowHeaders: true,
+            colHeaders: ['ID', 'LocID', 'Date', 'Temp', 'Humidity', 'Wind speed', 'Wind direction', 'Location'],
+            hiddenColumns: {
+                columns: [1],
+                indicators: true
+            },
+            dropdownMenu: true,
+            filters: true,
+            licenseKey: 'non-commercial-and-evaluation'
+        });
+    }
+</script>
+
+</body>
+</html>
