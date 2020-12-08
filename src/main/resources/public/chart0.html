@@ -7,7 +7,12 @@
 
 <!-- Create a div where the graph will take place -->
 <div id="my_dataviz"></div>
-
+<!-- Circle are black when hovered-->
+<style>
+    .myCircle:hover {
+        stroke: black;
+    }
+</style>
 
 <script>
 // set the dimensions and margins of the graph
@@ -23,13 +28,7 @@ var svg = d3.select("#my_dataviz")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 //Read the data
-/*
-  // When reading the csv, I must format variables:
-  function(d){
-    return { date : d3.timeParse("%Y-%m-%dT%H:%M")(d.date), value : d.temperature }
-  },
-  // Now I can use this dataset:
- */
+
 d3.json("http://localhost:4567/records/1",
 
   function(data) {
@@ -53,9 +52,38 @@ d3.json("http://localhost:4567/records/1",
       .attr("stroke", "#69b3a2")
       .attr("stroke-width", 1.5)
       .attr("d", d3.line()
-        .x(function(d) { return x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) })
-        .y(function(d) { return y(d.temperature) })
-        )
+              .curve(d3.curveBasis)
+              .x(function(d) { return x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) })
+              .y(function(d) { return y(d.temperature) })
+        );
+
+      // create a tooltip
+      var Tooltip = d3.select("#my_dataviz")
+          .append("div")
+          .style("opacity", 0)
+          .attr("class", "tooltip")
+          .style("background-color", "white")
+          .style("border", "solid")
+          .style("border-width", "1px")
+          .style("border-radius", "5px")
+          .style("padding", "5px");
+
+      // Three functions that change the tooltip when user hover / move / leave a cell
+      var mouseover = function(d) {
+          Tooltip
+              .style("opacity", 1)
+      };
+      var mousemove = function(d) {
+          console.log(x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) + "px, "+y(d.temperature) + "px");
+          return Tooltip
+              .html("Wind speed: " + d.windSpeed)
+              .style("left", x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) + "px")
+              .style("top", y(d.temperature) + "px");
+      };
+      var mouseleave = function(d) {
+          Tooltip
+              .style("opacity", 0)
+      };
     // Add the points
     svg
       .append("g")
@@ -63,9 +91,15 @@ d3.json("http://localhost:4567/records/1",
       .data(data)
       .enter()
       .append("circle")
+        .attr("class", "myCircle")
         .attr("cx", function(d) { return x(d3.timeParse("%Y-%m-%dT%H:%M")(d.date)) } )
         .attr("cy", function(d) { return y(d.temperature) } )
         .attr("r", 5)
-        .attr("fill", "#69b3a2")
+        .attr("stroke", "#69b3a2")
+        .attr("stroke-width", 1)
+        .attr("fill", "white")
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave);
 });
 </script>
