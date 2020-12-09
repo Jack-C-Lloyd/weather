@@ -9,12 +9,19 @@
 <div id="my_dataviz"></div>
 <!-- Circle are black when hovered-->
 <style>
+    #my_dataviz {
+        border: 1px solid black;
+        text-align: center;
+        margin: auto;
+        font-size: 40pt;
+        color: gainsboro;
+    }
     .myCircle:hover {
         stroke: black;
     }
 </style>
 
-<script src="scatter.js"></script>
+<script src="chart.js"></script>
 
 <script>
 // set the dimensions and margins of the graph
@@ -34,7 +41,7 @@ var host = "http://localhost:4567/";
 var records = host + "records/";
 var locations = host + "locations";
 
-drawGraph(1);
+//drawGraph(1);
 
 d3.json(locations, function (data) {
     var theselect = document.getElementById("loc_id");
