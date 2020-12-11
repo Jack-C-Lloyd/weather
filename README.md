@@ -46,16 +46,18 @@ You can use the UNIX command line tool `curl` to call these endpoints with the r
 
 ```
 $ curl -H "Accept: application/json"  http://localhost:4567/locations
-{ "status": "SUCCESS", "url": "http://brighton.ac.uk", "enc": "be6ce4cd" }
+[{"locID":1,"name":"Alberta, Canada","lat":51.33319,"lon":-110.625,"asl":763.029},
+{"locID":2,"name":"Brighton, UK","lat":51.33319,"lon":-110.625,"asl":763.029}]
+
 
 $ curl -H "Accept: application/json" --request POST -d \
   "name=Kolkata, India&lat=22.5726&lon=88.3639&asl=0" http://localhost:4567/locations
-{}
+{"locID":3,"name":"Kolkata, India","lat":22.5726,"lon":88.3639,"asl":0.0}
 
 $ curl -H "Accept: application/json" --request POST -d \
 "ts=2020-12-07T00:00&temp=5.0&hum=9&ws=42&wd=99" http://localhost:4567/records/2
-{"recordID":198,"locID":2,"timestamp":"Dec 7, 2020, 12:00:00 AM",
-"temperature":5.0,"humidity":9.0,"windSpeed":42.0,"windDirection":99.0}
+{"recordID":385,"locID":2,"date":"2020-12-07T00:00","temperature":5.0,"humidity":9.0,
+"windSpeed":42.0,"windDirection":99.0}
 ```
 
 ## Alternative front-ends to `weather-data`
@@ -89,7 +91,15 @@ The webservice has the following endpoints:
 Experiment with calling the endpoints from the commandline:
 
 ```
-$ curl .........
+$ curl -H "Accept: application/json"  http://localhost:5678/1
+{"location":{"locID":1,"name":"Alberta, Canada","lat":51.33319,"lon":-110.625,"asl":763.029},"from":"2020-11-30T00:00",
+"to":"2020-12-07T23:00","average":-5.063791,"type":"TEMPERATURE"}
+$ curl -H "Accept: application/json"  http://localhost:5678/2/2020/12
+{"location":{"locID":2,"name":"Brighton, UK","lat":51.33319,"lon":-110.625,"asl":763.029},"from":"2020-12-01T00:00",
+"to":"2020-12-08T23:00","average":-4.318124,"type":"TEMPERATURE"}
+$ curl -H "Accept: application/json"  http://localhost:5678/2/2020/12/01
+{"location":{"locID":2,"name":"Brighton, UK","lat":51.33319,"lon":-110.625,"asl":763.029},"from":"2020-12-01T00:00",
+"to":"2020-12-01T23:00","average":-7.1913953,"type":"TEMPERATURE"}
 ```
 
 ## Exercise
