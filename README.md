@@ -81,6 +81,7 @@ address as the previous service but uses a different port so you can run them si
 The webservice has the following endpoints:
 
 | Endpoint | Verb | Description |
+| -------- | ---- | ----------- |
 | `/<locid>` | `GET` | Returns the average temperature over all records made at the location with id `<locid>`. |
 | `/<locid>/<year>/<month>` | `GET` | Returns the average temperature over all records made at the location with id `<locid>` in the year `<year>` (four digits) and month `<month>` (two digits). |
 | `/<locid>/<year>/<month>/<day>` | `GET` | Returns the average temperature over all records made at the location with id `<locid>` in the year `<year>` (four digits), month `<month>` (two digits) and day `<day>` (two digits). |
