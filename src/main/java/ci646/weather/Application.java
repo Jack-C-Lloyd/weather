@@ -91,12 +91,18 @@ public class Application {
             return jsonify(model.getLocation(id));
         });
 
-        // Handle GET requests for named locations -- JSON
+        // Handle GET requests for named locations and IDs -- JSON
         get("/locations/:name", "application/json", (req, res) -> {
             String name = req.params(":name");
             log.info("received GET locations/"+name);
-            Optional<List<Location>> or = model.getLocationsByName(name);
-            return jsonify(or);
+            try {
+                long id = Long.parseLong(name);
+                Optional<Location> or = model.getLocation(id);
+                return jsonify(or);
+            } catch (NumberFormatException nfe) {
+                Optional<List<Location>> or = model.getLocationsByName(name);
+                return jsonify(or);
+            }
         });
 
         /*
@@ -120,11 +126,14 @@ public class Application {
 
         // Handle GET requests for records at a given location -- JSON
         get("/records/:loc/:from/:to", "application/json", (req, res) -> {
-            log.info("received GET records FOR LOCATION FROM TO");
-            long id = Long.parseLong(req.params(":loc"));
+            String locStr = req.params(":loc").trim();
+            String fromStr = req.params(":from").trim();
+            String toStr = req.params(":to").trim();
+            log.info(String.format("received GET records FOR LOCATION %s FROM %s TO %s", locStr, fromStr, toStr));
+            long id = Long.parseLong(locStr);
             try {
-                Timestamp from = Timestamp.from(LocalDateTime.parse(req.params(":from")).toInstant(ZoneOffset.UTC));
-                Timestamp to = Timestamp.from(LocalDateTime.parse(req.params(":to")).toInstant(ZoneOffset.UTC));
+                Timestamp from = Timestamp.from(LocalDateTime.parse(fromStr).toInstant(ZoneOffset.UTC));
+                Timestamp to = Timestamp.from(LocalDateTime.parse(toStr).toInstant(ZoneOffset.UTC));
                 Optional<List<Record>> or = model.getRecords(id, from, to);
                 return jsonify(or);
             } catch (DateTimeParseException e) {
