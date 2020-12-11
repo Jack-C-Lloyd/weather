@@ -52,7 +52,7 @@ public class Application {
         port(port);
 
         // Handle GET requests for the average of all data associated with a location
-        get("/loc/:locid", "application/json", (req, res) -> {
+        get("/:locid", "application/json", (req, res) -> {
             String locID = req.params(":locID");
             log.info("received GET avg for location "+locID);
             // get all location info so we can return it with the result
@@ -67,7 +67,7 @@ public class Application {
         });
 
         // Handle GET requests for the average of all data recorded at a given location in a given month
-        get("/loc/:loc/:y/:m", "application/json", (req, res) -> {
+        get("/:loc/:y/:m", "application/json", (req, res) -> {
             String locID = req.params(":loc");
             String yearStr = req.params(":y");
             String monthStr = req.params(":m");
@@ -88,7 +88,7 @@ public class Application {
         });
 
         // Handle GET requests for the average of all data recorded at a given location on a given day
-        get("/loc/:loc/:y/:m/:d", "application/json", (req, res) -> {
+        get("/:loc/:y/:m/:d", "application/json", (req, res) -> {
             String locID = req.params(":loc");
             String yearStr = req.params(":y");
             String monthStr = req.params(":m");
