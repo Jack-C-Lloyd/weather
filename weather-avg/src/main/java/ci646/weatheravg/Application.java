@@ -33,6 +33,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 @Slf4j
 public class Application {
@@ -52,8 +54,9 @@ public class Application {
         port(port);
 
         // Handle GET requests for the average of all data associated with a location
-        get("/:locid", "application/json", (req, res) -> {
+        get("/:locid/:type", "application/json", (req, res) -> {
             String locID = req.params(":locID");
+            Average.TYPE t = typeFromString(req.params(":type"));
             log.info("received GET avg for location "+locID);
             // get all location info so we can return it with the result
             String locjson = readUrl(weatherService+"/locations/"+ locID);
@@ -62,13 +65,14 @@ public class Application {
             // get the records from the weather-data service
             String json = readUrl(weatherService+"/records/"+ locID);
             Record[] temps = gson.fromJson(json, Record[].class);
-            Average a = recordsToAverage(temps, l);
+            Average a = recordsToAverage(temps, t, l);
             return jsonify(Optional.of(a));
         });
 
         // Handle GET requests for the average of all data recorded at a given location in a given month
-        get("/:loc/:y/:m", "application/json", (req, res) -> {
+        get("/:loc/:type/:y/:m", "application/json", (req, res) -> {
             String locID = req.params(":loc");
+            Average.TYPE t = typeFromString(req.params(":type"));
             String yearStr = req.params(":y");
             String monthStr = req.params(":m");
             log.info(String.format("received GET avg for location %s YEAR %s MONTH %s", locID, yearStr, monthStr));
@@ -83,13 +87,14 @@ public class Application {
             String fromStr = startDate.format(dtf);
             String toStr = endDate.format(dtf);
 
-            Average a = averageForRange(Long.parseLong(locID), fromStr, toStr);
+            Average a = averageForRange(Long.parseLong(locID), t, fromStr, toStr);
             return jsonify(Optional.of(a));
         });
 
         // Handle GET requests for the average of all data recorded at a given location on a given day
-        get("/:loc/:y/:m/:d", "application/json", (req, res) -> {
+        get("/:loc/:type/:y/:m/:d", "application/json", (req, res) -> {
             String locID = req.params(":loc");
+            Average.TYPE t = typeFromString(req.params(":type"));
             String yearStr = req.params(":y");
             String monthStr = req.params(":m");
             String dayStr = req.params(":d");
@@ -97,10 +102,19 @@ public class Application {
                     locID, yearStr, monthStr, dayStr));
             String fromStr = yearStr+"-"+monthStr+"-"+dayStr+"T00:00";
             String toStr = yearStr+"-"+monthStr+"-"+dayStr+"T23:59";
-            Average a = averageForRange(Long.parseLong(locID), fromStr, toStr);
+            Average a = averageForRange(Long.parseLong(locID), t, fromStr, toStr);
             return jsonify(Optional.of(a));
         });
 
+    }
+
+    private static Average.TYPE typeFromString(String type) {
+        switch (type) {
+            case "HU": return Average.TYPE.HUMIDITY;
+            case "WS": return Average.TYPE.WIND_SPEED;
+            case "WD": return Average.TYPE.WIND_DIRECTION;
+            default: return Average.TYPE.TEMPERATURE;
+        }
     }
 
     /**
@@ -147,8 +161,19 @@ public class Application {
      * @param l
      * @return
      */
-    private static Average recordsToAverage(Record[] records, Location l) {
-        float sum = (float) Arrays.stream(records).mapToDouble(Record::getTemperature).sum();
+    private static Average recordsToAverage(Record[] records, Average.TYPE t, Location l) {
+        Function<Record, Float> f;
+        switch (t) {
+            case HUMIDITY: f = Record::getHumidity;
+                break;
+            case WIND_DIRECTION: f = Record::getWindDirection;
+                break;
+            case WIND_SPEED: f = Record::getWindSpeed;
+                break;
+            default:
+                f = Record::getTemperature;
+        }
+        float sum = (float) Arrays.stream(records).mapToDouble((ToDoubleFunction<? super Record>) f).sum();
         Timestamp from = Arrays.stream(records).min(Comparator.comparing(Record::getDate))
                 .orElseThrow(NoSuchElementException::new)
                 .getDate();
@@ -156,7 +181,7 @@ public class Application {
                 .orElseThrow(NoSuchElementException::new)
                 .getDate();
         float avg = sum / records.length;
-        return new Average(l, from, to, avg, Average.TYPE.TEMPERATURE);
+        return new Average(l, from, to, avg, t);
     }
 
     /**
@@ -168,7 +193,7 @@ public class Application {
      * @return
      * @throws Exception
      */
-    private static Average averageForRange(long locID, String fromStr, String toStr)
+    private static Average averageForRange(long locID, Average.TYPE t, String fromStr, String toStr)
             throws Exception {
         String locjson = readUrl(weatherService+"/locations/"+ locID);
         Location l = gson.fromJson(locjson, Location.class);
@@ -183,6 +208,6 @@ public class Application {
         json = readUrl(String.format("http://localhost:4567/records/%s/%s/%s", locID, fromStr, toStr));
         log.info(json);
         Record[] temps = gson.fromJson(json, Record[].class);
-        return recordsToAverage(temps, l);
+        return recordsToAverage(temps, t, l);
     }
 }
