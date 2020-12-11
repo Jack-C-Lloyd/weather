@@ -1,4 +1,10 @@
 package ci646.weather;
+/**
+ * Entry point for the weather data micro-service. It provides a REST API
+ * That allows users to retrieve data recording for locations (using the ID or name of that
+ * location in the Weather DB, the ID of a particular record, or the combination of a location and a time).
+ *
+ */
 
 import ci646.weather.model.Model;
 import ci646.weather.model.Record;
@@ -10,14 +16,9 @@ import com.google.gson.JsonObject;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.extern.slf4j.Slf4j;
-import netscape.javascript.JSObject;
 import org.sql2o.Sql2o;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
@@ -43,10 +44,8 @@ public class Application {
         Config conf         = ConfigFactory.load();
         int port            = conf.getInt("web.port");
         String host         = conf.getString("web.host");
-        String HOME         = host +":"+port;
         String staticLoc    = conf.getString("web.staticFiles");
         String templatePath = conf.getString("web.templatePath");
-        String indexPath    = templatePath + "index.vm";
         long staticTO       = conf.getLong("web.staticTimeout");
         String dbConnString = conf.getString("db.connectionString");
         String dbUser       = conf.getString("db.user");
@@ -72,26 +71,27 @@ public class Application {
         Locations
          */
 
-        // Handle GET requests for named locations -- JSON
+        // Handle GET requests for all locations.
         get("/locations", "application/json", (req, res) -> {
             log.info("received GET locations");
             Optional<List<Location>> or = model.getLocations();
             return jsonify(or);
         });
 
-        // Handle POST requests for locations -- JSON
+        // Handle POST requests to put a new location. Returns the location created.
         post("/locations", "application/json", (req, res) -> {
             log.info(req.queryString());
             Location l = new Location(req.queryParams("name")
                     , Float.parseFloat(req.queryParams("lat"))
                     , Float.parseFloat(req.queryParams("lon"))
                     , Float.parseFloat(req.queryParams("asl")));
-            log.info("received PUT location");
+            log.info("received POST location");
             long id = model.putLocation(l);
             return jsonify(model.getLocation(id));
         });
 
-        // Handle GET requests for named locations and IDs -- JSON
+        // Handle GET requests for named locations and IDs -- can handle a string param (which search for the location
+        // name) or a numeric ID.
         get("/locations/:name", "application/json", (req, res) -> {
             String name = req.params(":name");
             log.info("received GET locations/"+name);
@@ -109,28 +109,30 @@ public class Application {
         Records
          */
 
-        // Handle GET requests for all records  -- JSON
+        // Handle GET requests for all records.
         get("/records", "application/json", (req, res) -> {
-            log.info("received GET records FOR LOCATION");
+            log.info("received GET records");
             Optional<List<Record>> or = model.getRecords();
             return jsonify(or);
         });
 
-        // Handle GET requests for records at a given location -- JSON
+        // Handle GET requests for records at a given location.
         get("/records/:loc", "application/json", (req, res) -> {
-            log.info("received GET records FOR LOCATION");
             long id = Long.parseLong(req.params(":loc"));
+            log.info("received GET records FOR LOCATION "+id);
             Optional<List<Record>> or = model.getRecords(id);
             return jsonify(or);
         });
 
-        // Handle GET requests for records at a given location -- JSON
+        // Handle GET requests for records at a given location in a time range.
         get("/records/:loc/:from/:to", "application/json", (req, res) -> {
-            String locStr = req.params(":loc").trim();
-            String fromStr = req.params(":from").trim();
-            String toStr = req.params(":to").trim();
-            log.info(String.format("received GET records FOR LOCATION %s FROM %s TO %s", locStr, fromStr, toStr));
+            String locStr = req.params(":loc");
+            String fromStr = req.params(":from");
+            String toStr = req.params(":to");
+            log.info(String.format("received GET records FOR LOCATION %s FROM %s TO %s",
+                    locStr, fromStr, toStr));
             long id = Long.parseLong(locStr);
+            // Try to parse the timestamps, could fail
             try {
                 Timestamp from = Timestamp.from(LocalDateTime.parse(fromStr).toInstant(ZoneOffset.UTC));
                 Timestamp to = Timestamp.from(LocalDateTime.parse(toStr).toInstant(ZoneOffset.UTC));
@@ -141,9 +143,8 @@ public class Application {
             }
         });
 
-        // Handle POST requests for records -- JSON
+        // Handle POST requests for a new record. Returns the new record.
         post("/records/:loc", "application/json", (req, res) -> {
-            log.info(req.queryString());
             long loc = Long.parseLong(req.params(":loc"));
             Timestamp ts = Timestamp.from(LocalDateTime.parse(req.queryParams("ts")).toInstant(ZoneOffset.UTC));
             Record r = new Record(loc
@@ -152,27 +153,24 @@ public class Application {
                     , Float.parseFloat(req.queryParams("hum"))
                     , Float.parseFloat(req.queryParams("ws"))
                     , Float.parseFloat(req.queryParams("wd")));
-            log.info("received PUT record");
             long id = model.putRecord(r);
+            log.info(String.format("PUT record ID %d FOR LOCATION %d",
+                    id, loc));
             return jsonify(model.getRecord(id));
         });
     }
 
+    /**
+     * Helper method to turn Optional objects into JSON strings.
+     * @param o
+     * @param <T>
+     * @return
+     */
     private static <T> String jsonify(Optional<T> o) {
         if (o == null || o.isEmpty()) {
             return gson.toJson(new JsonObject());
         } else {
             return gson.toJson(o.get());
         }
-    }
-
-    /**
-     * Helper method to render a velocity template
-     * @param model
-     * @param templatePath
-     * @return
-     */
-    private static String render(Map<String, Object> model, String templatePath) {
-        return new VelocityTemplateEngine().render(new ModelAndView(model, templatePath));
     }
 }

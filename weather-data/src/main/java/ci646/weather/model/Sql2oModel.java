@@ -1,4 +1,7 @@
 package ci646.weather.model;
+/**
+ * The Object-Relational Mapping, using the Sql2o framework. Written for an SQLite database.
+ */
 
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
@@ -15,6 +18,8 @@ public class Sql2oModel implements Model {
 
     public Sql2oModel(Sql2o sql2o) {
         this.sql2o = sql2o;
+        // The mapping from column names in the DB to field names in the DAOs.
+        // Onle need to be supplied when they differ.
         Map<String, String> colMaps = new HashMap<String,String>();
         colMaps.put("LOC_ID", "locID");
         colMaps.put("RECORD_ID", "recordID");
@@ -24,6 +29,11 @@ public class Sql2oModel implements Model {
         sql2o.setDefaultColumnMappings(colMaps);
     }
 
+    /**
+     * Store a new location in the DB. Returns the ID of the new location.
+     * @param loc
+     * @return
+     */
     @Override
     public long putLocation(Location loc) {
         try (Connection conn = sql2o.open()) {
@@ -39,6 +49,11 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Get a location based on its ID.
+     * @param locationID
+     * @return
+     */
     @Override
     public Optional<Location> getLocation(long locationID) {
         try (Connection conn = sql2o.open()) {
@@ -56,6 +71,11 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Get all locations whose name matches a search term.
+     * @param name
+     * @return
+     */
     @Override
     public Optional<List<Location>> getLocationsByName(String name) {
         try (Connection conn = sql2o.open()) {
@@ -71,6 +91,10 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Get all locations.
+     * @return
+     */
     @Override
     public Optional<List<Location>> getLocations() {
         try (Connection conn = sql2o.open()) {
@@ -85,6 +109,11 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Store a new record. Returns the ID of the new record.
+     * @param rec
+     * @return
+     */
     @Override
     public long putRecord(Record rec) {
         try (Connection conn = sql2o.open()) {
@@ -102,6 +131,11 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Retrieve a record by its ID.
+     * @param id
+     * @return
+     */
     @Override
     public Optional<Record> getRecord(long id) {
         try (Connection conn = sql2o.open()) {
@@ -114,6 +148,13 @@ public class Sql2oModel implements Model {
             return Optional.of(result);
         }
     }
+
+    /**
+     * Retrieve a record by its Location ID and timestamp.
+     * @param locationID
+     * @param ts
+     * @return
+     */
     @Override
     public Optional<Record> getRecord(long locationID, Timestamp ts) {
         try (Connection conn = sql2o.open()) {
@@ -132,6 +173,10 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Get all records.
+     * @return
+     */
     @Override
     public Optional<List<Record>> getRecords() {
         try (Connection conn = sql2o.open()) {
@@ -147,6 +192,11 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Get all records at a given location.
+     * @param locationID
+     * @return
+     */
     @Override
     public Optional<List<Record>> getRecords(long locationID) {
         try (Connection conn = sql2o.open()) {
@@ -164,6 +214,13 @@ public class Sql2oModel implements Model {
         }
     }
 
+    /**
+     * Get all records at a given location within a given time range.
+     * @param locationID
+     * @param from
+     * @param to
+     * @return
+     */
     @Override
     public Optional<List<Record>> getRecords(long locationID, Timestamp from, Timestamp to) {
         try (Connection conn = sql2o.open()) {
