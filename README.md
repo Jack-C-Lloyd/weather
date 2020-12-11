@@ -105,6 +105,6 @@ $ curl -H "Accept: application/json"  http://localhost:5678/2/2020/12/01
 ## Exercise
 
 Currently, `weather-avg` only supplies average values for temperature records. Extend this service to return average values for humidity, wind speed and wind
-direction. You will need to add a token to the endpoints to specify which type of value is required, e.g. adding an extra paremeter that must be one
-of `TE`, `HU`, `WS` or `WD`. You will also need to extend the helper methods `recordsToAverage` and `averageForRange`.
+direction. You will need to add a token to the endpoints to specify which type of value is required, e.g. adding an extra paremeter after the `<locid>` 
+that must be one of `TE`, `HU`, `WS` or `WD`. You will also need to extend the helper methods `recordsToAverage` and `averageForRange`.
 Remember to set the `TYPE` field in the instance of `Average` before returning it.
