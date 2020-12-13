@@ -61,9 +61,13 @@ public class Application {
 
             // get the records from the weather-data service
             String json = readUrl(weatherService+"/records/"+ locID);
-            Record[] temps = gson.fromJson(json, Record[].class);
-            Average a = recordsToAverage(temps, l);
-            return jsonify(Optional.of(a));
+            if(json.equals(new JsonObject().toString())) { // No data in the response
+                return new JsonObject();
+            } else {
+                Record[] temps = gson.fromJson(json, Record[].class);
+                Average a = recordsToAverage(temps, l);
+                return jsonify(Optional.of(a));
+            }
         });
 
         // Handle GET requests for the average of all data recorded at a given location in a given month
