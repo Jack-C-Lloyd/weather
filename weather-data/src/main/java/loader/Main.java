@@ -41,11 +41,9 @@ public class Main {
         try (BufferedReader br
                      = new BufferedReader(new InputStreamReader(is))) {
             String line;
-            String[] fields = null;
+            String[] fields;
             while ((line = br.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) {
-                    // do nothing
-                } else {
+                if (!line.isEmpty() && !line.startsWith("#")) {
                     fields = line.split(",");
                     Location l = new Location(fields[0] + "," + fields[1],
                             Float.parseFloat(fields[2].trim()),
@@ -63,11 +61,9 @@ public class Main {
         try (BufferedReader br
                      = new BufferedReader(new InputStreamReader(is))) {
             String line;
-            String[] fields = null;
+            String[] fields;
             while ((line = br.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("#")) {
-                    // do nothing
-                } else {
+                if (!line.isEmpty() && !line.startsWith("#")) {
                     fields = line.split(",");
                     long locID1 = model.getLocationsByName("Alberta, Canada").get().get(0).getLocID();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd hhmm");
@@ -87,9 +83,7 @@ public class Main {
             try (BufferedReader br2
                          = new BufferedReader(new InputStreamReader(is))) {
                 while ((line = br2.readLine()) != null) {
-                    if (line.isEmpty() || line.startsWith("#")) {
-                        // do nothing
-                    } else {
+                    if (!line.isEmpty() && !line.startsWith("#")) {
                         fields = line.split(",");
                         long locID2 = model.getLocationsByName("Brighton, UK").get().get(0).getLocID();
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd hhmm");
@@ -106,9 +100,7 @@ public class Main {
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
     }
