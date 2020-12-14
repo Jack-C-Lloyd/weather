@@ -1,14 +1,4 @@
 package ci646.weatheravg;
-/**
- * Entry point for the weather averages micro-service. It provides a REST API
- * That allows users to retrieve average values for locations (using the ID of that
- * location in the Weather DB) for:
- * + Every record ever made at that location,
- * + All records for a given month
- * + All records for a given day
- *
- * Currently only deals in temperature data.
- */
 
 import ci646.weatheravg.model.Average;
 import ci646.weatheravg.model.Location;
@@ -36,6 +26,16 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
+/**
+ * Entry point for the weather averages micro-service. It provides a REST API
+ * That allows users to retrieve average values for locations (using the ID of that
+ * location in the Weather DB) for:
+ * + Every record ever made at that location,
+ * + All records for a given month
+ * + All records for a given day
+ *
+ * Currently only deals in temperature data.
+ */
 @Slf4j
 public class Application {
 
@@ -57,7 +57,7 @@ public class Application {
         get("/:locid/:type", "application/json", (req, res) -> {
             String locID = req.params(":locID");
             Average.TYPE t = typeFromString(req.params(":type"));
-            log.info("received GET avg for location "+locID);
+            log.info(String.format("received GET avg %s for location %s", t, locID));
             // get all location info so we can return it with the result
             String locjson = readUrl(weatherService+"/locations/"+ locID);
             Location l = gson.fromJson(locjson, Location.class);
@@ -75,7 +75,8 @@ public class Application {
             Average.TYPE t = typeFromString(req.params(":type"));
             String yearStr = req.params(":y");
             String monthStr = req.params(":m");
-            log.info(String.format("received GET avg for location %s YEAR %s MONTH %s", locID, yearStr, monthStr));
+            log.info(String.format("received GET avg %s for location %s YEAR %s MONTH %s",
+                    t, locID, yearStr, monthStr));
 
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
             boolean isLY = LocalDate.parse(yearStr+"-"+monthStr+"-"+"01",
@@ -98,8 +99,8 @@ public class Application {
             String yearStr = req.params(":y");
             String monthStr = req.params(":m");
             String dayStr = req.params(":d");
-            log.info(String.format("received GET avg for location %s YEAR %s MONTH %s DAY %s",
-                    locID, yearStr, monthStr, dayStr));
+            log.info(String.format("received GET avg %s for location %s YEAR %s MONTH %s DAY %s",
+                    t, locID, yearStr, monthStr, dayStr));
             String fromStr = yearStr+"-"+monthStr+"-"+dayStr+"T00:00";
             String toStr = yearStr+"-"+monthStr+"-"+dayStr+"T23:59";
             Average a = averageForRange(Long.parseLong(locID), t, fromStr, toStr);
@@ -109,26 +110,26 @@ public class Application {
     }
 
     private static Average.TYPE typeFromString(String type) {
-        switch (type) {
-            case "HU": return Average.TYPE.HUMIDITY;
-            case "WS": return Average.TYPE.WIND_SPEED;
-            case "WD": return Average.TYPE.WIND_DIRECTION;
-            default: return Average.TYPE.TEMPERATURE;
-        }
+        return switch (type) {
+            case "HU" -> Average.TYPE.HUMIDITY;
+            case "WS" -> Average.TYPE.WIND_SPEED;
+            case "WD" -> Average.TYPE.WIND_DIRECTION;
+            default -> Average.TYPE.TEMPERATURE;
+        };
     }
 
     /**
      * Read the contents from a HTTP GET request to a URL
-     * @param urlString
-     * @return
-     * @throws Exception
+     * @param urlString     The URL to read from
+     * @return              The body of the HTTP response as a String
+     * @throws Exception    If the URL isn't available
      */
     private static String readUrl(String urlString) throws Exception {
         BufferedReader reader = null;
         try {
             URL url = new URL(urlString);
             reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             int read;
             char[] chars = new char[1024];
             while ((read = reader.read(chars)) != -1)
@@ -143,9 +144,10 @@ public class Application {
 
     /**
      * Turn an Optional object into a JSON String
-     * @param o
-     * @param <T>
-     * @return
+     * @param o     The Optional to JSONify
+     * @param <T>   The type of the value carried by `o'
+     * @return      A String containing the JSON version of the object inside `o',
+     *              or an empty JSON object if `o' is null or empty
      */
     private static <T> String jsonify(Optional<T> o) {
         if (o == null || o.isEmpty()) {
@@ -157,23 +159,19 @@ public class Application {
 
     /**
      * Calculate the average (temperature) from an array of records.
-     * @param records
-     * @param l
-     * @return
+     * @param records   The array of Record objects from which to calculate the average
+     * @param t         The type of average value to calculate
+     * @param l         The location of the records
+     * @return          The average value
      */
     private static Average recordsToAverage(Record[] records, Average.TYPE t, Location l) {
-        Function<Record, Float> f;
-        switch (t) {
-            case HUMIDITY: f = Record::getHumidity;
-                break;
-            case WIND_DIRECTION: f = Record::getWindDirection;
-                break;
-            case WIND_SPEED: f = Record::getWindSpeed;
-                break;
-            default:
-                f = Record::getTemperature;
-        }
-        float sum = (float) Arrays.stream(records).mapToDouble((ToDoubleFunction<? super Record>) f).sum();
+        ToDoubleFunction<Record> f = switch (t) {
+            case HUMIDITY ->       r -> (double) r.getHumidity();
+            case WIND_DIRECTION -> r -> (double) r.getWindDirection();
+            case WIND_SPEED ->     r -> (double) r.getWindSpeed();
+            default ->             r -> (double) r.getTemperature();
+        };
+        float sum = (float) Arrays.stream(records).mapToDouble(f).sum();
         Timestamp from = Arrays.stream(records).min(Comparator.comparing(Record::getDate))
                 .orElseThrow(NoSuchElementException::new)
                 .getDate();
@@ -187,11 +185,12 @@ public class Application {
     /**
      * Retrieve the average (temperature) for a date range, where the beginning and
      * end of the range are represented as strings in the format yyyy-MM-ddTHH:mm
-     * @param locID
-     * @param fromStr
-     * @param toStr
-     * @return
-     * @throws Exception
+     * @param locID     ID of the location for which we are calculating an average
+     * @param t         The type of average value to calculate
+     * @param fromStr   The start of the time range as a string 'yyyy-MM-ddTHH:mm'
+     * @param toStr     The end of the time range as a string 'yyyy-MM-ddTHH:mm'
+     * @return          The average value
+     * @throws Exception    If the call to readURL throws an Exception
      */
     private static Average averageForRange(long locID, Average.TYPE t, String fromStr, String toStr)
             throws Exception {
@@ -204,9 +203,7 @@ public class Application {
         LocalDateTime startDate = LocalDateTime.parse(fromStr, dtf);
         LocalDateTime endDate = LocalDateTime.parse(toStr, dtf);
 
-        String json = null;
-        json = readUrl(String.format("http://localhost:4567/records/%s/%s/%s", locID, fromStr, toStr));
-        log.info(json);
+        String json = readUrl(String.format("http://localhost:4567/records/%s/%s/%s", locID, fromStr, toStr));
         Record[] temps = gson.fromJson(json, Record[].class);
         return recordsToAverage(temps, t, l);
     }
